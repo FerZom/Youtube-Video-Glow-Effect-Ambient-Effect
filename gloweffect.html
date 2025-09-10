@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reusable Video Glow</title>
+  <style>
+    body {
+      margin: 0;
+      background: #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+      gap: 30px;
+    }
+
+    .video-container {
+      width: 90vh;
+      /* ekranın %80’i */
+      height: auto;
+      position: relative;
+      display: inline-block;
+    }
+
+    video {
+      display: block;
+      border-radius: 10px;
+      z-index: 1;
+      position: relative;
+      width: 100%;
+      height: auto;
+    }
+
+    .glow-layer {
+      position: absolute;
+      pointer-events: none;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      top: 0;
+      left: 0;
+      filter: blur(20px);
+    }
+
+    .glow {
+      mix-blend-mode: screen;
+      position: absolute;
+      width: 30%;
+      height: 30%;
+      border-radius: 50%;
+      transition: background 0.5s;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="video-container" id="videoContainer1">
+    <video id="video1" autoplay loop muted width="320">
+      <source src="fort.mp4" type="video/mp4">
+    </video>
+    <div class="glow-layer"></div>
+  </div>
+
+  <script>
+    function resizeGlowLayer(videoElement, glowLayer, margin = 50) {
+      const rect = videoElement.getBoundingClientRect();
+      glowLayer.style.top = `-${margin}px`;
+      glowLayer.style.left = `-${margin}px`;
+      /*glowLayer.style.width = `${rect.width + margin * 2}px`;
+      glowLayer.style.height = `${rect.height + margin * 2}px`; */
+    }
+
+    function applyVideoGlow(videoSelector, containerSelector, options = {}) {
+      const videoElement = typeof videoSelector === "string"
+        ? document.querySelector(videoSelector)
+        : videoSelector;
+
+      const containerElement = typeof containerSelector === "string"
+        ? document.querySelector(containerSelector)
+        : containerSelector;
+
+      if (!videoElement || !containerElement) {
+        console.error("Video veya container bulunamadı:", videoSelector, containerSelector);
+        return;
+      }
+
+      const rows = options.rows || 3;
+      const cols = options.cols || 3;
+      const blur = options.blur || 60;
+      const opacity = options.opacity || 0.6;
+
+      const glowLayer = containerElement.querySelector('.glow-layer');
+      glowLayer.innerHTML = '';
+
+      const glows = [];
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const glowDiv = document.createElement('div');
+          glowDiv.classList.add('glow');
+          glowDiv.style.top = `${(r / rows) * 100}%`;
+          glowDiv.style.left = `${(c / cols) * 100}%`;
+          glowDiv.style.filter = `blur(${blur}px)`;
+          glowDiv.style.opacity = opacity;
+          glowLayer.appendChild(glowDiv);
+          glows.push(glowDiv);
+        }
+      }
+
+      function adjust() {
+        resizeGlowLayer(videoElement, glowLayer, 50);
+      }
+      adjust();
+      window.addEventListener("resize", adjust);
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+
+      function updateGlow() {
+        if (videoElement.paused || videoElement.ended) return;
+
+        canvas.width = videoElement.videoWidth;
+        canvas.height = videoElement.videoHeight;
+        ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+
+        const cellWidth = Math.floor(canvas.width / cols);
+        const cellHeight = Math.floor(canvas.height / rows);
+
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            const x = c * cellWidth + Math.floor(cellWidth / 2);
+            const y = r * cellHeight + Math.floor(cellHeight / 2);
+
+            const pixel = ctx.getImageData(x, y, 1, 1).data;
+            const color = `rgba(${pixel[0]}, ${pixel[1]}, ${pixel[2]}, ${opacity})`;
+
+            glows[r * cols + c].style.background = color;
+          }
+        }
+
+        requestAnimationFrame(updateGlow);
+      }
+
+      videoElement.addEventListener('play', () => {
+        updateGlow();
+      });
+    }
+
+    // Usage:
+    applyVideoGlow("#video1", "#videoContainer1", { rows: 5, cols: 5, blur: 0, opacity: 0.7 });
+  </script>
+
+</body>
+
+</html>
