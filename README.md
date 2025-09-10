@@ -16,8 +16,8 @@
   - Responsive tasarım, ekran boyutuna göre otomatik uyum sağlar.  
 
 ## Live Preview / Canlı Önizleme
+<img width="1919" height="1030" alt="image" src="https://github.com/user-attachments/assets/548e2ffd-8d57-434c-9ceb-8ed8bb990ca2" />
 
-![Example Screenshot](example.gif)  
 > Example of the screen after applying the glow effect on the video.  
 > Videoya glow efekti uygulandıktan sonra ekran görünümü örneği. *(Opsiyonel: kendi GIF veya ekran görüntüsü ekleyin)*
 
